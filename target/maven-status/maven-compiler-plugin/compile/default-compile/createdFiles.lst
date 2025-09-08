@@ -1,0 +1,11 @@
+Server\ConnectionHandler.class
+Storage\CsvManager.class
+Server\DiseaseDatabase.class
+Server\Server.class
+Main\Main.class
+Model\Patient.class
+Client\Client.class
+Model\DetectionReport.class
+Logging\LogManager.class
+Model\Disease.class
+validation\FastaValidator.class

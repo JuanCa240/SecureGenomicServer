@@ -3,13 +3,15 @@ package Server;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.net.ssl.SSLSocket;
 
 public class Server {
     private int port;
-    private SSLServerSocket sslServerSocket;
+    private ServerSocket serverSocket;
     private ExecutorService executorService;
     private DiseaseDatabase diseaseDatabase;
 
@@ -22,12 +24,7 @@ public class Server {
     // Inicializa y arranca el servidor
     public void start() {
         try {
-            
-            System.setProperty("javax.net.ssl.keyStore", "C:\\Users\\Juan Camilo\\serverkeystore.jks");
-            System.setProperty("javax.net.ssl.keyStorePassword", "password");
-            
-            SSLServerSocketFactory factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-            sslServerSocket = (SSLServerSocket) factory.createServerSocket(port);
+            serverSocket = new ServerSocket(port);
 
             System.out.println("Servidor escuchando en el puerto " + port);
 
@@ -47,11 +44,12 @@ public class Server {
     private void acceptConnections() {
         while (true) {
             try {
-                var socket = sslServerSocket.accept();
+                Socket socket = serverSocket.accept();
                 System.out.println("Nuevo cliente conectado.");
 
                 // Crear un handler por cliente
-                ConnectionHandler handler = new ConnectionHandler((SSLSocket) socket, diseaseDatabase);
+                ConnectionHandler handler = new ConnectionHandler(socket, diseaseDatabase);
+
                 executorService.submit(handler);
 
             } catch (IOException e) {
@@ -61,3 +59,4 @@ public class Server {
         }
     }
 }
+

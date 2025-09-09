@@ -3,11 +3,12 @@ package Client;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
+import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
     private String nombreClient;
-    private SSLSocket sslSocket;
+    private Socket socket;
     private Scanner consola;
     private PrintWriter output;
     private BufferedReader input;
@@ -17,16 +18,10 @@ public class Client {
         this.consola = new Scanner(System.in);
         try {
             // Crear socket seguro SSL
-            
-            System.setProperty("javax.net.ssl.trustStore", "C:\\Users\\Juan Camilo\\clienttruststore.jks");
-            System.setProperty("javax.net.ssl.trustStorePassword", "password");
+            this.socket = new Socket(host, port);
 
-            
-            SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            this.sslSocket = (SSLSocket) factory.createSocket(host, port);
-
-            this.output = new PrintWriter(new OutputStreamWriter(sslSocket.getOutputStream(), "UTF-8"), true);
-            this.input = new BufferedReader(new InputStreamReader(sslSocket.getInputStream(), "UTF-8"));
+            this.output = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
+            this.input = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 
             System.out.println("Cliente " + nombreClient + " conectado al servidor " + host + ":" + port);
         } catch (Exception e) {
@@ -43,28 +38,32 @@ public class Client {
 
     // Enviar archivo FASTA completo
     public void sendFasta(String filePath) {
-        try {
-            File file = new File(filePath);
-            long length = file.length();
+        File file = new File(filePath);
+        long length = file.length();
 
+        try {
             output.println("START_FASTA " + length);
             output.flush();
 
-            try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
-                 OutputStream os = sslSocket.getOutputStream()) {
-
+            try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file))) {
+                OutputStream os = socket.getOutputStream();
                 byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = bis.read(buffer)) != -1) {
-                    os.write(buffer, 0, bytesRead);
+                long remaining = length;
+                int read;
+
+                while (remaining > 0 && (read = bis.read(buffer, 0, (int)Math.min(buffer.length, remaining))) != -1) {
+                    os.write(buffer, 0, read);
+                    remaining -= read;
                 }
-                os.flush();
+                os.flush(); 
             }
+
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Error enviando FASTA: " + e.getMessage());
         }
     }
+
 
     // Recibir respuesta del servidor
     public String receiveResponse() {
@@ -83,7 +82,7 @@ public class Client {
     // Cerrar conexión
     public void close() {
         try {
-            if (sslSocket != null) sslSocket.close();
+            if (socket != null) socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

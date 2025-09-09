@@ -75,6 +75,44 @@ public class Patient {
         return fileSizeBytes;
     }
 
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public void setDocumentID(String documentID) {
+        this.documentID = documentID;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
+    public void setContactEmail(String contactEmail) {
+        this.contactEmail = contactEmail;
+    }
+
+    public void setRegistrationDate(LocalDateTime registrationDate) {
+        this.registrationDate = registrationDate;
+    }
+
+    public void setClinicalNotes(String clinicalNotes) {
+        this.clinicalNotes = clinicalNotes;
+    }
+
+    public void setChecksumFasta(String checksumFasta) {
+        this.checksumFasta = checksumFasta;
+    }
+
+    public void setFileSizeBytes(long fileSizeBytes) {
+        this.fileSizeBytes = fileSizeBytes;
+    }
+    
+    
+
     // Validaciones simples
     public boolean isValidEmail() {
         String regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";

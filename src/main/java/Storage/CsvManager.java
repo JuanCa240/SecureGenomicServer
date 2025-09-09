@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Storage;
 
 import Model.Patient;
@@ -93,7 +89,7 @@ public class CsvManager {
     }
 
     // ✅ Actualizar paciente (simplificado: sobrescribe archivo)
-    public void updatePatient(Patient p) {
+    public synchronized void updatePatient(Patient p) {
         List<String> lines = new ArrayList<>();
         try (BufferedReader reader = Files.newBufferedReader(patientsFile)) {
             String header = reader.readLine();
@@ -119,16 +115,21 @@ public class CsvManager {
                     lines.add(line);
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        // ✅ ahora el reader ya está cerrado, se puede escribir sin bloquear
+        try {
             Files.write(patientsFile, lines);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+
     // ✅ Desactivar paciente (borrado lógico)
-    public void deactivatePatient(String id) {
+    public synchronized void deactivatePatient(String id) {
         List<String> lines = new ArrayList<>();
         try (BufferedReader reader = Files.newBufferedReader(patientsFile)) {
             String header = reader.readLine();
@@ -137,6 +138,7 @@ public class CsvManager {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
+                if (parts.length < 11) continue; // ignorar líneas corruptas
                 if (parts[0].equals(id)) {
                     parts[10] = "false"; // marcar inactivo
                     lines.add(String.join(",", parts));
@@ -144,14 +146,19 @@ public class CsvManager {
                     lines.add(line);
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        // ✅ escribir después de cerrar el reader
+        try {
             Files.write(patientsFile, lines);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+     
     // ✅ Convertir línea CSV en objeto Patient
     private Patient parsePatient(String[] parts) {
         try {

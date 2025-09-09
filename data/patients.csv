@@ -1,1 +1,2 @@
 patientID,fullName,documentID,age,sex,contactEmail,registrationDate,clinicalNotes,checksumFasta,fileSizeBytes,active
+1054398670,JuanCa,1054398670,20,M,juancapulgarin9@gmail.ciom,2025-09-09T14:49:12.876646600,sintomas,5b350e7a5bf58712f245c6efbc9dac25caf9e86ecefa5e8ffc9bd186d4d8d9d8,38,true

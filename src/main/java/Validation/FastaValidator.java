@@ -19,10 +19,10 @@ public class FastaValidator {
 
             // Validar que las siguientes líneas contengan solo A, C, G, T, N
             while ((line = reader.readLine()) != null) {
-                if (!line.matches("^[ACGTN]+$")) {
-                    return false;
-                }
+                line = line.toUpperCase().replaceAll("[^ACGTN]", "");
+                if (line.isEmpty()) continue; 
             }
+
             return true;
 
         } catch (IOException e) {

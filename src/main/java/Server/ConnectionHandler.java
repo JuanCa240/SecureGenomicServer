@@ -40,7 +40,7 @@ public class ConnectionHandler implements Runnable {
         this.socket = socket;
         this.diseaseDatabase = diseaseDatabase;
         this.csvManager = csvManager; 
-         this.logManager = new LogManager("data/server.log");
+        this.logManager = new LogManager("data/server.log");
 
         try {
             // Se crean los flujos de entrada/salida con codificación UTF-8
@@ -134,10 +134,10 @@ public class ConnectionHandler implements Runnable {
      * Crea un nuevo paciente a partir de la metadata y el archivo FASTA recibido.
      * Valida formato, checksum, y almacena en el CSV.
      */
-    
-    private void handleCreatePatient() {
+        private void handleCreatePatient() {
             try {
-            
+                logManager.logInfo("Iniciando creación de paciente...");
+
                 String line;
                 Patient patient = null;
                 String fastaChecksum = null;
@@ -148,7 +148,6 @@ public class ConnectionHandler implements Runnable {
                 while ((line = inputStream.readLine()) != null && !line.equals("END_METADATA")) {
                     metadata.append(line).append("\n");
 
-                    // Se guardan datos relevantes (checksum y tamaño del archivo)
                     if (line.startsWith("checksum_fasta:")) {
                         fastaChecksum = line.split(":")[1].trim();
                     }
@@ -157,212 +156,23 @@ public class ConnectionHandler implements Runnable {
                     }
                 }
 
-                //  Validación del encabezado FASTA
+                // Validación del encabezado FASTA
                 String fastaHeader = inputStream.readLine();
                 if (fastaHeader == null || !fastaHeader.startsWith("START_FASTA")) {
                     outputStream.println("ERROR 422 INVALID_FASTA_HEADER");
+                    logManager.logError("Fallo creación paciente: encabezado FASTA inválido.");
                     return;
                 }
 
-                // Número de bytes esperados del archivo FASTA
                 long nbytes = Long.parseLong(fastaHeader.split(" ")[1]);
                 File patientFasta = new File("data/patient_" + System.currentTimeMillis() + ".fasta");
 
-                // Guardar el archivo FASTA en disco
-                try (FileOutputStream fos = new FileOutputStream(patientFasta)) {
-                    InputStream is = socket.getInputStream();
-
-                    byte[] buffer = new byte[4096];
-                    long remaining = nbytes;
-
-                    while (remaining > 0) {
-                        int read = is.read(buffer, 0, (int) Math.min(buffer.length, remaining));
-                        if (read == -1) {
-                            break; // fin de stream
-                        }
-                        fos.write(buffer, 0, read);
-                        remaining -= read;
-                    }
-
-                    fos.flush();
-                }
-
-               // Validaciones de formato y checksum del FASTA 
-                if (!FastaValidator.isValidFormat(patientFasta.getAbsolutePath())) {
-                    outputStream.println("ERROR 422 INVALID_FASTA");
-                    return;
-                }
-                
-                // Extraer document_id obligatorio
-                String realChecksum = FastaValidator.calculateChecksum(patientFasta.getAbsolutePath());
-                if (fastaChecksum != null && !fastaChecksum.equals(realChecksum)) {
-                    outputStream.println("ERROR 422 CHECKSUM_MISMATCH");
-                    return;
-                }
-                
-                String documentID = null;
-                for (String metaLine : metadata.toString().split("\n")) {
-                    if (metaLine.startsWith("document_id:")) {
-                        documentID = metaLine.split(":")[1].trim();
-                        break;
-                    }
-                }
-                
-                if (documentID == null) {
-                    outputStream.println("ERROR 400 MISSING_DOCUMENT_ID");
-                    return;
-                }
-
-                // Validar que el ID sea numérico  
-                int patientId;
-                try {
-                    patientId = Integer.parseInt(documentID); 
-                } catch (NumberFormatException e) {
-                    outputStream.println("ERROR 400 INVALID_DOCUMENT_ID");
-                    return;
-                }
-                
-                // Extraer más metadata de los atributos.
-                String fullName = null;
-                String ageStr = null;
-                String sex = null;
-                String email = null;
-                String notes = null;
-
-                for (String metaLine : metadata.toString().split("\n")) {
-                    if (metaLine.startsWith("full_name:")) fullName = metaLine.split(":")[1].trim();
-                    else if (metaLine.startsWith("age:")) ageStr = metaLine.split(":")[1].trim();
-                    else if (metaLine.startsWith("sex:")) sex = metaLine.split(":")[1].trim();
-                    else if (metaLine.startsWith("contact_email:")) email = metaLine.split(":")[1].trim();
-                    else if (metaLine.startsWith("clinical_notes:")) notes = metaLine.split(":")[1].trim();
-                }
-
-                // Convertir la edad de age a int.
-                int age = 0;
-                try {
-                    age = Integer.parseInt(ageStr);
-                } catch (NumberFormatException e) {
-                    outputStream.println("ERROR 400 INVALID_AGE");
-                    return;
-                }
-
-                // Crear objeto Patient con toda la info
-                patient = new Patient(
-                        fullName,
-                        documentID,
-                        age,
-                        sex,
-                        email,
-                        java.time.LocalDateTime.now(),
-                        notes,
-                        realChecksum,
-                        fastaSize
-                );
-
-                patient.setPatientID(patientId);
-
-                // Guardar paciente en CSV
-                csvManager.appendPatient(patient);
-                outputStream.println("201 CREATED patient_id: " + patient.getPatientID());
-
-
-                // Generar reportes de deteccion comparando la secuencia contra enfermedades
-                List<DetectionReport> reports = detectDiseases(patient, patientFasta.getAbsolutePath());
-               for (int i = 0; i < reports.size(); i++) {
-                    DetectionReport r = reports.get(i);
-                    csvManager.appendReport(r);
-                    outputStream.println("DETECTION " + r.toString());
-                }
-
-                //Agarra una expecion en casos de errores.
-            } catch (IOException e) {
-                e.printStackTrace();
-                outputStream.println("ERROR 500 SERVER_ERROR");
-            }
-        }
-    
-        /**
-        * Actualiza la información de un paciente existente.
-        * Permite modificar metadata (nombre, edad, sexo, email, notas) 
-        * y opcionalmente reemplazar su archivo FASTA.
-        */
-
-        private void handleUpdatePatient() {
-        try {
-            logManager.logInfo("Iniciando creación de paciente...");
-            
-            String line;
-            String patientId = null;                        // Identificador del paciente a actualizar.
-            Map<String, String> updates = new HashMap<>();  // Cambios a aplicar.
-            long fastaSize = 0;                             // Tamaño del nuevo archivo FASTA (si existe)
-
-            //  Leer metadata hasta encontrar END_METADATA
-            while ((line = inputStream.readLine()) != null && !line.equals("END_METADATA")) {
-                if (line.startsWith("patient_id:")) 
-                    patientId = line.split(":")[1].trim();
-                 else if (line.startsWith("file_size_bytes:")) 
-                    fastaSize = Long.parseLong(line.split(":")[1].trim());
-                 else {
-                    String[] parts = line.split(":");
-                    if (parts.length == 2) {
-                        updates.put(parts[0].trim(), parts[1].trim());
-                    }
-                }
-            }
-
-            // Validar que se haya enviado un ID de paciente
-            if (patientId == null) {
-                outputStream.println("ERROR 400 MISSING_PATIENT_ID");
-                return;
-            }
-            
-            // Buscar paciente en el CSV
-            Patient p = csvManager.getPatientById(patientId);
-            if (p == null) {
-                outputStream.println("ERROR 404 NOT_FOUND");
-                return;
-            }
-
-            // Aplicar actualizaciones a los campos del paciente
-            for (Map.Entry<String, String> entry : updates.entrySet()) {
-                String k = entry.getKey();
-                String v = entry.getValue();
-
-                switch (k) {
-                    case "full_name":
-                        p.setFullName(v);
-                        break;
-                    case "age":
-                        p.setAge(Integer.parseInt(v));
-                        break;
-                    case "sex":
-                        p.setSex(v);
-                        break;
-                    case "contact_email":
-                        p.setContactEmail(v);
-                        break;
-                    case "clinical_notes":
-                        p.setClinicalNotes(v);
-                        break;
-                }
-            }
-
-
-            // Si se envió un archivo FASTA nuevo
-            if (fastaSize > 0) {
-                String fastaHeader = inputStream.readLine();
-                if (fastaHeader == null || !fastaHeader.startsWith("START_FASTA")) {
-                    outputStream.println("ERROR 422 INVALID_FASTA_HEADER");
-                    return;
-                }
-                
-                // Guardar archivo FASTA actualizado
-                long nbytes = Long.parseLong(fastaHeader.split(" ")[1]);
-                File patientFasta = new File("data/patient_" + patientId + "_updated.fasta");
+                // Guardar archivo FASTA
                 try (FileOutputStream fos = new FileOutputStream(patientFasta)) {
                     InputStream is = socket.getInputStream();
                     byte[] buffer = new byte[4096];
                     long remaining = nbytes;
+
                     while (remaining > 0) {
                         int read = is.read(buffer, 0, (int) Math.min(buffer.length, remaining));
                         if (read == -1) break;
@@ -372,27 +182,179 @@ public class ConnectionHandler implements Runnable {
                     fos.flush();
                 }
 
-                 // Validar formato FASTA
+                // Validaciones
                 if (!FastaValidator.isValidFormat(patientFasta.getAbsolutePath())) {
                     outputStream.println("ERROR 422 INVALID_FASTA");
+                    logManager.logError("Fallo creación paciente: archivo FASTA inválido.");
                     return;
                 }
-                
-                 // Calcular checksum del nuevo archivo
+
                 String realChecksum = FastaValidator.calculateChecksum(patientFasta.getAbsolutePath());
-                p.setChecksumFasta(realChecksum);
-                p.setFileSizeBytes(fastaSize);
+                if (fastaChecksum != null && !fastaChecksum.equals(realChecksum)) {
+                    outputStream.println("ERROR 422 CHECKSUM_MISMATCH");
+                    logManager.logError("Fallo creación paciente: checksum no coincide.");
+                    return;
+                }
+
+                String documentID = null;
+                for (String metaLine : metadata.toString().split("\n")) {
+                    if (metaLine.startsWith("document_id:")) {
+                        documentID = metaLine.split(":")[1].trim();
+                        break;
+                    }
+                }
+
+                if (documentID == null) {
+                    outputStream.println("ERROR 400 MISSING_DOCUMENT_ID");
+                    logManager.logError("Fallo creación paciente: falta document_id.");
+                    return;
+                }
+
+                int patientId;
+                try {
+                    patientId = Integer.parseInt(documentID);
+                } catch (NumberFormatException e) {
+                    outputStream.println("ERROR 400 INVALID_DOCUMENT_ID");
+                    logManager.logError("Fallo creación paciente: document_id inválido.");
+                    return;
+                }
+
+                // Extraer más metadata
+                String fullName = null, ageStr = null, sex = null, email = null, notes = null;
+                for (String metaLine : metadata.toString().split("\n")) {
+                    if (metaLine.startsWith("full_name:")) fullName = metaLine.split(":")[1].trim();
+                    else if (metaLine.startsWith("age:")) ageStr = metaLine.split(":")[1].trim();
+                    else if (metaLine.startsWith("sex:")) sex = metaLine.split(":")[1].trim();
+                    else if (metaLine.startsWith("contact_email:")) email = metaLine.split(":")[1].trim();
+                    else if (metaLine.startsWith("clinical_notes:")) notes = metaLine.split(":")[1].trim();
+                }
+
+                int age = 0;
+                try {
+                    age = Integer.parseInt(ageStr);
+                } catch (NumberFormatException e) {
+                    outputStream.println("ERROR 400 INVALID_AGE");
+                    logManager.logError("Fallo creación paciente: edad inválida.");
+                    return;
+                }
+
+                patient = new Patient(fullName, documentID, age, sex, email,
+                        java.time.LocalDateTime.now(), notes, realChecksum, fastaSize);
+                patient.setPatientID(patientId);
+
+                csvManager.appendPatient(patient);
+                outputStream.println("201 CREATED patient_id: " + patient.getPatientID());
+                logManager.logInfo("Paciente creado exitosamente con ID: " + patientId);
+
+                // Detectar enfermedades
+                List<DetectionReport> reports = detectDiseases(patient, patientFasta.getAbsolutePath());
+                for (DetectionReport r : reports) {
+                    csvManager.appendReport(r);
+                    outputStream.println("DETECTION " + r.toString());
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                logManager.logError("Error en creación de paciente: " + e.getMessage());
+                outputStream.println("ERROR 500 SERVER_ERROR");
             }
-
-             // Guardar paciente actualizado en el CSV
-            csvManager.updatePatient(p);
-            outputStream.println("OK patient updated");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            outputStream.println("ERROR 500 SERVER_ERROR");
         }
-    }
+   
+        /**
+        * Actualiza la información de un paciente existente.
+        * Permite modificar metadata (nombre, edad, sexo, email, notas) 
+        * y opcionalmente reemplazar su archivo FASTA.
+        */
+
+        private void handleUpdatePatient() {
+            try {
+                logManager.logInfo("Iniciando actualización de paciente...");
+
+                String line;
+                String patientId = null;
+                Map<String, String> updates = new HashMap<>();
+                long fastaSize = 0;
+
+                while ((line = inputStream.readLine()) != null && !line.equals("END_METADATA")) {
+                    if (line.startsWith("patient_id:")) 
+                        patientId = line.split(":")[1].trim();
+                    else if (line.startsWith("file_size_bytes:")) 
+                        fastaSize = Long.parseLong(line.split(":")[1].trim());
+                    else {
+                        String[] parts = line.split(":");
+                        if (parts.length == 2) updates.put(parts[0].trim(), parts[1].trim());
+                    }
+                }
+
+                if (patientId == null) {
+                    outputStream.println("ERROR 400 MISSING_PATIENT_ID");
+                    logManager.logError("Fallo actualización: falta patient_id.");
+                    return;
+                }
+
+                Patient p = csvManager.getPatientById(patientId);
+                if (p == null) {
+                    outputStream.println("ERROR 404 NOT_FOUND");
+                    logManager.logError("Fallo actualización: paciente no encontrado (ID " + patientId + ")");
+                    return;
+                }
+
+                for (Map.Entry<String, String> entry : updates.entrySet()) {
+                    String k = entry.getKey();
+                    String v = entry.getValue();
+                    switch (k) {
+                        case "full_name": p.setFullName(v); break;
+                        case "age": p.setAge(Integer.parseInt(v)); break;
+                        case "sex": p.setSex(v); break;
+                        case "contact_email": p.setContactEmail(v); break;
+                        case "clinical_notes": p.setClinicalNotes(v); break;
+                    }
+                }
+
+                if (fastaSize > 0) {
+                    String fastaHeader = inputStream.readLine();
+                    if (fastaHeader == null || !fastaHeader.startsWith("START_FASTA")) {
+                        outputStream.println("ERROR 422 INVALID_FASTA_HEADER");
+                        logManager.logError("Fallo actualización: encabezado FASTA inválido.");
+                        return;
+                    }
+                    long nbytes = Long.parseLong(fastaHeader.split(" ")[1]);
+                    File patientFasta = new File("data/patient_" + patientId + "_updated.fasta");
+                    try (FileOutputStream fos = new FileOutputStream(patientFasta)) {
+                        InputStream is = socket.getInputStream();
+                        byte[] buffer = new byte[4096];
+                        long remaining = nbytes;
+                        while (remaining > 0) {
+                            int read = is.read(buffer, 0, (int) Math.min(buffer.length, remaining));
+                            if (read == -1) break;
+                            fos.write(buffer, 0, read);
+                            remaining -= read;
+                        }
+                        fos.flush();
+                    }
+
+                    if (!FastaValidator.isValidFormat(patientFasta.getAbsolutePath())) {
+                        outputStream.println("ERROR 422 INVALID_FASTA");
+                        logManager.logError("Fallo actualización: archivo FASTA inválido.");
+                        return;
+                    }
+
+                    String realChecksum = FastaValidator.calculateChecksum(patientFasta.getAbsolutePath());
+                    p.setChecksumFasta(realChecksum);
+                    p.setFileSizeBytes(fastaSize);
+                }
+
+                csvManager.updatePatient(p);
+                outputStream.println("OK patient updated");
+                logManager.logInfo("Paciente actualizado exitosamente: ID " + patientId);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                logManager.logError("Error en actualización de paciente: " + e.getMessage());
+                outputStream.println("ERROR 500 SERVER_ERROR");
+            }
+        }
+
         
      /**
      * Elimina (desactiva) un paciente del sistema según su ID.
@@ -402,16 +364,20 @@ public class ConnectionHandler implements Runnable {
         try {
             Patient p = csvManager.getPatientById(patientId);
             if (p != null) {
-                csvManager.deactivatePatient(patientId); //Este se marcaria como inactivo
+                csvManager.deactivatePatient(patientId);
                 outputStream.println("OK patient deleted");
+                logManager.logInfo("Paciente eliminado lógicamente: ID " + patientId);
             } else {
                 outputStream.println("ERROR 404 NOT_FOUND");
+                logManager.logError("Fallo eliminación: paciente no encontrado (ID " + patientId + ")");
             }
         } catch (Exception e) {
             e.printStackTrace();
+            logManager.logError("Error en eliminación de paciente: " + e.getMessage());
             outputStream.println("ERROR 500 SERVER_ERROR");
         }
     }
+
 
 
     /**
@@ -421,9 +387,11 @@ public class ConnectionHandler implements Runnable {
     private void handleRetrievePatient(String patientId) {
         Patient p = csvManager.getPatientById(patientId);
         if (p != null) {
-            outputStream.println("OK\n" + p.toString()); //Retorna toda la informacion del paciente
+            outputStream.println("OK\n" + p.toString());
+            logManager.logInfo("Paciente consultado: ID " + patientId);
         } else {
             outputStream.println("ERROR 404 NOT_FOUND");
+            logManager.logError("Fallo consulta: paciente no encontrado (ID " + patientId + ")");
         }
     }
 

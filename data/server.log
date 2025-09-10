@@ -1,0 +1,11 @@
+2025-09-10T10:33:17.696572 [INFO] Nueva conexión establecida con cliente: /127.0.0.1
+2025-09-10T10:34:03.873207 [INFO] Solicitud recibida: CREATE_PATIENT
+2025-09-10T10:34:03.874210900 [INFO] Procesando creación de paciente...
+2025-09-10T10:34:03.875209300 [INFO] Iniciando creación de paciente...
+2025-09-10T10:34:03.918428900 [INFO] Paciente creado exitosamente con ID: 1234
+2025-09-10T10:34:10.078952100 [INFO] Solicitud recibida: RETRIEVE_PATIENT 1234
+2025-09-10T10:34:10.079874200 [INFO] Consultando paciente ID: 1234
+2025-09-10T10:34:10.101851900 [INFO] Paciente consultado: ID 1234
+2025-09-10T10:34:40.622402300 [INFO] Solicitud recibida: DELETE_PATIENT 1234
+2025-09-10T10:34:40.623401600 [INFO] Eliminando paciente ID: 1234
+2025-09-10T10:34:40.634404500 [INFO] Paciente eliminado lógicamente: ID 1234

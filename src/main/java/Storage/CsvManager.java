@@ -72,16 +72,16 @@ public class CsvManager {
     
     public synchronized void appendPatient(Patient p) {
         String line = p.getPatientID() + "," +
-        p.getDocumentID() + "," +
-        p.getFullName() + "," +
-        p.getAge() + "," +
-        p.getSex() + "," +
-        p.getContactEmail() + "," +
-        p.getRegistrationDate().toLocalDate() + " " + p.getRegistrationDate().toLocalTime().withNano(0) + "," +
-        p.getClinicalNotes().replace(",", ";") + "," +
-        p.getFileSizeBytes() + "," +
-        p.getChecksumFasta() + "," +
-        "true";
+            p.getDocumentID() + "," +
+            p.getFullName() + "," +
+            p.getAge() + "," +
+            p.getSex() + "," +
+            p.getContactEmail() + "," +
+            p.getRegistrationDate() + "," +
+            p.getClinicalNotes().replace(",", ";") + "," +
+            p.getChecksumFasta() + "," +
+            p.getFileSizeBytes() + "," +
+            "true"; 
 
 
         try (BufferedWriter writer = Files.newBufferedWriter(patientsFile, StandardOpenOption.APPEND)) {
@@ -154,18 +154,20 @@ public class CsvManager {
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
                 if (parts[0].equals(String.valueOf(p.getPatientID()))) {
-                    // Reemplazar por versión nueva
-                    lines.add(p.getPatientID() + "," +
-                            p.getFullName() + "," + 
-                            p.getDocumentID() + "," +
-                            p.getAge() + "," +
-                            p.getSex() + "," +
-                            p.getContactEmail() + "," +
-                            p.getRegistrationDate().toLocalDate() + " " + p.getRegistrationDate().toLocalTime().withNano(0) + "," +
-                            p.getClinicalNotes().replace(",", ";") + "," +
-                            p.getChecksumFasta() + "," +
-                            p.getFileSizeBytes() + "," +
-                            "true");
+                    
+                    lines.add(
+                        p.getPatientID() + "," +
+                        p.getFullName() + "," +
+                        p.getDocumentID() + "," +
+                        p.getAge() + "," +
+                        p.getSex() + "," +
+                        p.getContactEmail() + "," +
+                        p.getRegistrationDate() + "," +
+                        p.getClinicalNotes().replace(",", ";") + "," +
+                        p.getChecksumFasta() + "," +
+                        p.getFileSizeBytes() + "," +
+                        "true"
+                      );
                 } else {
                     lines.add(line);
                 }

@@ -21,7 +21,7 @@ public class FastaValidator {
      /**
      * Verifica que el archivo FASTA tenga un formato válido.
      * Un archivo válido debe lo siguiente:
-     * Tener La primera línea que empieza con '>'.
+     * Tener La primera línea que empieza con '>'
      * Y Las siguientes líneas contener únicamente A, C, G, T o N (mayusculas).
      * 
      * @param filePath ruta del archivo FASTA

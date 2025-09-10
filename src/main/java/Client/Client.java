@@ -119,7 +119,7 @@ public class Client {
 
             String response = sb.toString().trim();
             if (!response.isEmpty()) {
-                System.out.println("📩 Servidor responde:\n" + response);
+                System.out.println("Servidor responde:\n" + response);
             }
             return response;
         } catch (IOException e) {

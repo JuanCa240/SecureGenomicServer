@@ -218,6 +218,15 @@ public class ConnectionHandler implements Runnable {
                     logManager.logError("Fallo creación paciente: document_id inválido.");
                     return;
                 }
+                
+                // Validar duplicado de document_id
+                Patient existing = csvManager.getPatientById(documentID);
+                if (existing != null) {
+                    outputStream.println("ERROR 409 DUPLICATE_DOCUMENT_ID");
+                    logManager.logError("Fallo creación paciente: document_id duplicado (" + documentID + ")");
+                    return;
+                }
+
 
                 // Extraer más metadata
                 String fullName = null, ageStr = null, sex = null, email = null, notes = null;

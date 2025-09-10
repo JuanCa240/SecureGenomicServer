@@ -9,3 +9,16 @@
 2025-09-10T10:34:40.622402300 [INFO] Solicitud recibida: DELETE_PATIENT 1234
 2025-09-10T10:34:40.623401600 [INFO] Eliminando paciente ID: 1234
 2025-09-10T10:34:40.634404500 [INFO] Paciente eliminado lógicamente: ID 1234
+2025-09-10T10:58:35.535006200 [INFO] Nueva conexión establecida con cliente: /127.0.0.1
+2025-09-10T10:59:21.650630700 [INFO] Solicitud recibida: CREATE_PATIENT
+2025-09-10T10:59:21.650630700 [INFO] Procesando creación de paciente...
+2025-09-10T10:59:21.651665600 [INFO] Iniciando creación de paciente...
+2025-09-10T10:59:21.668934500 [INFO] Paciente creado exitosamente con ID: 1234
+2025-09-10T11:04:11.577485900 [INFO] Nueva conexión establecida con cliente: /127.0.0.1
+2025-09-10T11:04:53.412389300 [INFO] Solicitud recibida: RETRIEVE_PATIENT 1234
+2025-09-10T11:04:53.414406200 [INFO] Consultando paciente ID: 1234
+2025-09-10T11:04:53.421348900 [ERROR] Fallo consulta: paciente no encontrado (ID 1234)
+2025-09-10T11:05:24.986276700 [INFO] Solicitud recibida: CREATE_PATIENT
+2025-09-10T11:05:24.987279 [INFO] Procesando creación de paciente...
+2025-09-10T11:05:24.987279 [INFO] Iniciando creación de paciente...
+2025-09-10T11:05:24.996276800 [INFO] Paciente creado exitosamente con ID: 1234

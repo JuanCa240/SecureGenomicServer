@@ -1,2 +1,2 @@
 patientID,fullName,documentID,age,sex,contactEmail,registrationDate,clinicalNotes,checksumFasta,fileSizeBytes,active
-1234,JuanPerez,1234,20,M,juan,2025-09-10T10:34:03.885624400,sin sintomas,5b350e7a5bf58712f245c6efbc9dac25caf9e86ecefa5e8ffc9bd186d4d8d9d8,38,false
+1234,1234,juan,20,M,jaun@gmailñ.com,2025-09-10 11:05:24,sintomas,38,5b350e7a5bf58712f245c6efbc9dac25caf9e86ecefa5e8ffc9bd186d4d8d9d8,true

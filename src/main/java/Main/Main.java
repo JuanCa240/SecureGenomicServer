@@ -4,7 +4,6 @@ import Client.Client;
 import Server.Server;
 import Model.Patient;
 import java.io.File;
-
 import java.time.LocalDateTime;
 import java.util.Scanner;
 import validation.FastaValidator;
@@ -28,7 +27,6 @@ import validation.FastaValidator;
  * Aquí se integra todo como el servidor (Server), el cliente (Client)
  * y la lógica para manejar pacientes (Patient).
  */
-
 
 public class Main {
     private static Scanner scanner = new Scanner(System.in);

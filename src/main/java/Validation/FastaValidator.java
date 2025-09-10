@@ -5,14 +5,34 @@ import java.nio.file.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+/** Clase utilitaria para validar y procesar archivos FASTA.
+ * 
+ * Proporciona métodos estáticos para:
+ * Verificar que un archivo FASTA tenga formato válido.
+ * Calcular un checksum SHA-256 de un archivo FASTA.
+ * Normaliza la secuencia de un archivo FASTA.
+ * 
+ * Esta clase es útil en sistemas genómicos para garantizar la integridad
+ * de los datos y para realizar comparaciones de secuencias de manera confiable.
+ */
+
 public class FastaValidator {
 
-    // ✅ Verificar si el archivo FASTA tiene formato válido
+     /**
+     * Verifica que el archivo FASTA tenga un formato válido.
+     * Un archivo válido debe lo siguiente:
+     * Tener La primera línea que empieza con '>'.
+     * Y Las siguientes líneas contener únicamente A, C, G, T o N (mayusculas).
+     * 
+     * @param filePath ruta del archivo FASTA
+     * @return true si el archivo es válido, false si no lo es o ocurre un error de lectura
+     */
+
     public static boolean isValidFormat(String filePath) {
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(filePath))) {
             String line = reader.readLine();
 
-            // Validar que la primera línea empiece con '>'
+            
             if (line == null || !line.startsWith(">")) {
                 return false;
             }
@@ -31,7 +51,14 @@ public class FastaValidator {
         }
     }
 
-    // ✅ Calcular checksum SHA-256 de un archivo
+    /**
+     * Calcula el checksum SHA-256 de un archivo.
+     * Esto permite verificar la integridad del archivo FASTA.
+     * 
+     * @param filePath ruta del archivo a procesar
+     * @return cadena hexadecimal con el hash SHA-256, o null si ocurre un error
+     */
+    
     public static String calculateChecksum(String filePath) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -43,7 +70,6 @@ public class FastaValidator {
                 }
             }
 
-            // Convertir hash en hexadecimal
             byte[] hashBytes = digest.digest();
             StringBuilder hexString = new StringBuilder();
             for (byte b : hashBytes) {
@@ -57,7 +83,16 @@ public class FastaValidator {
         }
     }
     
-        // ✅ Normalizar el contenido de un FASTA (mayúsculas, sin espacios ni saltos)
+        /**
+     * Normaliza el contenido de un FASTA.
+     * Convierte todos los caracteres a mayúsculas y elimina cualquier carácter que no sea A, C, G, T o N.
+     * 
+     * Esto es útil para comparaciones de secuencias y detección de enfermedades.
+     * 
+     * @param fastaContent contenido del archivo FASTA como String
+     * @return secuencia normalizada lista para análisis
+     */
+    
         public static String normalize(String fastaContent) {
             if (fastaContent == null) return "";
             return fastaContent

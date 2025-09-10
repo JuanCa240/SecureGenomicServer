@@ -1,19 +1,26 @@
 package Model;
 
-
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
+/**
+ * Clase que representa a un paciente en el sistema genómico.
+ * Aquí se guardan sus datos básicos, información clínica y detalles del archivo FASTA cargado.
+ */
+
+    // Atrbiutos
+
 public class Patient {
-    private int patientID;              // generado por el servidor
+    private int patientID;              
     private String fullName;
-    private String documentID;          // único
+    private String documentID;          
     private int age;
-    private String sex;                 // "M" o "F"
+    private String sex;               
     private String contactEmail;
     private LocalDateTime registrationDate;
     private String clinicalNotes;
-    private String checksumFasta;       // hash MD5 o SHA-256
+    private String checksumFasta;      
+    
     private long fileSizeBytes;
 
     public Patient(String fullName, String documentID, int age, String sex,
@@ -113,7 +120,7 @@ public class Patient {
     
     
 
-    // Validaciones simples
+    // Validaciones como el correo y el sexo
     public boolean isValidEmail() {
         String regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
         return Pattern.matches(regex, this.contactEmail);

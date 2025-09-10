@@ -9,6 +9,27 @@ import java.time.LocalDateTime;
 import java.util.Scanner;
 import validation.FastaValidator;
 
+/**
+ * Clase Main
+ * -------------------
+ * Esta es la clase principal que levanta el sistema
+ * 
+ * Muestra un menu desde la consola para interactuar con el servidor y el cliente:
+ * 
+ * Opciones del menú:
+ *   1. Iniciar Servidor
+ *   2. Conectar Cliente
+ *   3. Crear Paciente
+ *   4. Consultar Paciente
+ *   5. Actualizar Paciente
+ *   6. Eliminar Paciente
+ *   7. Salir
+ *
+ * Aquí se integra todo como el servidor (Server), el cliente (Client)
+ * y la lógica para manejar pacientes (Patient).
+ */
+
+
 public class Main {
     private static Scanner scanner = new Scanner(System.in);
     private static Server server;
@@ -60,7 +81,11 @@ public class Main {
         }
     }
 
-    // ✅ Opción 1: Iniciar Servidor
+     /**
+     * Opción 1: Iniciar el servidor en un puerto específico.
+     * Si ya está iniciado, no hace nada.
+     */
+    
     private static void iniciarServidor() {
         if (server != null) {
             System.out.println("Servidor ya está en ejecución.");
@@ -71,13 +96,21 @@ public class Main {
 
         server = new Server(port);
 
-        // Arrancamos en un hilo aparte para no bloquear el menú
-        new Thread(() -> server.start()).start();
+        // Se arranca en un hilo aparte para que no bloquee el menú principal
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                server.start();
+            }
+        }).start();
 
         System.out.println("Servidor iniciado en puerto " + port);
     }
 
-    // ✅ Opción 2: Conectar Cliente
+
+    /**
+     * Opción 2: Conectar un cliente al servidor.
+     */
     private static void conectarCliente() {
         if (client != null) {
             System.out.println("Cliente ya conectado.");
@@ -91,7 +124,10 @@ public class Main {
         client = new Client("Cliente-1", host, port);
     }
 
-    // ✅ Opción 3: Crear Paciente
+     /**
+     * Opción 3: Crear un paciente y enviarlo al servidor.
+     * Incluye metadata y el archivo FASTA asociado.
+     */
     private static void crearPaciente() {
         if (client == null) {
             System.out.println("Primero debe conectar un cliente.");
@@ -113,11 +149,11 @@ public class Main {
         System.out.print("Ruta del archivo FASTA: ");
         String fastaPath = scanner.nextLine();
 
-        // ⚡ Por simplicidad, no calculamos checksum aquí: lo hace el servidor
+        // Se arma el objeto paciente (aunque los cálculos los hace el servidor)
         Patient p = new Patient(name, docId, age, sex, email,
                 LocalDateTime.now(), notes, "pending", 0);
 
-        // Enviar metadata al servidor
+        // Se arma el bloque de metadata que se manda al servidor
         StringBuilder metadata = new StringBuilder();
         metadata.append("CREATE_PATIENT\n");
         metadata.append("full_name: ").append(p.getFullName()).append("\n");
@@ -139,10 +175,16 @@ public class Main {
 
         // Leer respuesta
         client.receiveFullResponse();
+        System.out.println("¡Paciente creado exitosamente!");
+        
+        scanner.nextLine(); 
 
     }
 
-    // ✅ Opción 4: Consultar paciente
+    /**
+     * Opción 4: Consultar paciente en el servidor por su ID.
+     */
+    
     private static void consultarPaciente() {
         if (client == null) {
             System.out.println("Primero debe conectar un cliente.");
@@ -155,6 +197,10 @@ public class Main {
         client.receiveFullResponse();
     }
 
+    /**
+     * Opción 5: Actualizar datos de un paciente en el servidor.
+     * Permite dejar campos vacíos si no se quieren modificar.
+     */
     
     private static void actualizarPaciente() {
         if (client == null) {
@@ -206,6 +252,9 @@ public class Main {
 
     }
     
+     /**
+     * Opción 6: Eliminar un paciente por su ID de forma lógica.
+     */
     private static void eliminarPaciente() {
         if (client == null) {
             System.out.println("Primero debe conectar un cliente.");

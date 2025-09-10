@@ -14,24 +14,35 @@ public class DiseaseDatabase {
         this.diseases = new ArrayList<>();
     }
 
-    // Cargar enfermedades desde un directorio con archivos FASTA
+    /**
+     * Constructor que inicializa la base de datos de enfermedades vacía.
+     * @param folderPath
+     */
+    
     public void loadDiseases(String folderPath) {
-        diseases.clear(); // limpiar lista por si acaso
+        diseases.clear();
 
         try {
-            Files.list(Paths.get(folderPath))
-                    .filter(path -> path.toString().endsWith(".fasta") || path.toString().endsWith(".fa"))
-                    .forEach(this::parseFastaFile);
-
+            DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(folderPath));
+            for (Path path : stream) {
+                String fileName = path.toString();
+                if (fileName.endsWith(".fasta") || fileName.endsWith(".fa")) {
+                    parseFastaFile(path);
+                }
+            }
         } catch (IOException e) {
             System.err.println("Error cargando enfermedades: " + e.getMessage());
         }
     }
 
-    // Parsear un archivo FASTA y crear objeto Disease
+    /**
+     * Parsea un archivo FASTA y crea un objeto Disease a partir de su contenido.
+     * 
+     * @param path ruta del archivo FASTA
+     */
     private void parseFastaFile(Path path) {
         try (BufferedReader reader = Files.newBufferedReader(path)) {
-            String header = reader.readLine(); // primera línea
+            String header = reader.readLine();
             if (header == null || !header.startsWith(">")) {
                 System.err.println("Archivo FASTA inválido: " + path);
                 return;
@@ -64,17 +75,30 @@ public class DiseaseDatabase {
         }
     }
 
-    // Devolver todas las enfermedades
+    
+    /**
+     * Devuelve todas las enfermedades almacenadas en la base de datos.
+     * 
+     * @return lista de enfermedades
+     */
+    
     public List<Disease> getAll() {
         return diseases;
     }
 
-    // Buscar enfermedad por ID
+     /**
+     * Busca una enfermedad por su identificador único.
+     * 
+     * @param id identificador de la enfermedad
+     * @return objeto Disease si existe, null en caso contrario
+     */
+    
     public Disease findById(String id) {
-        return diseases.stream()
-                .filter(d -> d.getDiseaseId().equals(id))
-                .findFirst()
-                .orElse(null);
-        
+        for (Disease d : diseases) {
+            if (d.getDiseaseId().equals(id)) {
+                return d; 
+            }
+        }
+        return null; 
     }
 }

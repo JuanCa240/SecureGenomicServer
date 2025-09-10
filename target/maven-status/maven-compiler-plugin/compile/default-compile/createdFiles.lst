@@ -7,5 +7,6 @@ Model\Patient.class
 Client\Client.class
 Model\DetectionReport.class
 Logging\LogManager.class
+Main\Main$1.class
 Model\Disease.class
 validation\FastaValidator.class

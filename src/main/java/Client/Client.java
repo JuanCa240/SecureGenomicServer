@@ -1,7 +1,5 @@
 package Client;
 
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
@@ -65,12 +63,18 @@ public class Client {
     }
 
 
-    // Recibir respuesta del servidor
-    public String receiveResponse() {
+    public String receiveFullResponse() {
         try {
-            String response = input.readLine();
-            if (response != null) {
-                System.out.println("Servidor responde: " + response);
+            StringBuilder sb = new StringBuilder();
+            String line;
+
+            while (input.ready() && (line = input.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+
+            String response = sb.toString().trim();
+            if (!response.isEmpty()) {
+                System.out.println("Servidor responde:\n" + response);
             }
             return response;
         } catch (IOException e) {
@@ -78,6 +82,7 @@ public class Client {
             return "Error recibiendo respuesta";
         }
     }
+
 
     // Cerrar conexión
     public void close() {

@@ -126,16 +126,16 @@ public class Patient {
     @Override
     public String toString() {
         return "Patient{" +
-                "patientID=" + patientID +
-                ", fullName='" + fullName + '\'' +
-                ", documentID='" + documentID + '\'' +
-                ", age=" + age +
-                ", sex='" + sex + '\'' +
-                ", contactEmail='" + contactEmail + '\'' +
-                ", registrationDate=" + registrationDate +
-                ", clinicalNotes='" + clinicalNotes + '\'' +
-                ", checksumFasta='" + checksumFasta + '\'' +
-                ", fileSizeBytes=" + fileSizeBytes +
+                ",ID: " + patientID +
+                ",fullName: '" + fullName + '\'' +
+                ",documentID: '" + documentID + '\'' +
+                ",age: " + age +
+                ",sex:" + sex + '\'' +
+                ",contactEmail: '" + contactEmail + '\'' +
+                ",registrationDate: " + registrationDate +
+                ",clinicalNotes: '" + clinicalNotes + '\'' +
+                ",checksumFasta: '" + checksumFasta + '\'' +
+                ",fileSizeBytes: " + fileSizeBytes +
                 '}';
     }
 }

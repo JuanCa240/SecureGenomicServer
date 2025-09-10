@@ -20,10 +20,10 @@ public class ConnectionHandler implements Runnable {
     private DiseaseDatabase diseaseDatabase;
     private CsvManager csvManager;
 
-    public ConnectionHandler(Socket socket, DiseaseDatabase diseaseDatabase){
+    public ConnectionHandler(Socket socket, DiseaseDatabase diseaseDatabase,CsvManager csvManager){
         this.socket = socket;
         this.diseaseDatabase = diseaseDatabase;
-        this.csvManager = new CsvManager("data/patients.csv", "data/reports.csv");
+        this.csvManager = csvManager; 
 
         try {
             this.inputStream = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
@@ -317,21 +317,12 @@ public class ConnectionHandler implements Runnable {
     private void handleRetrievePatient(String patientId) {
         Patient p = csvManager.getPatientById(patientId);
         if (p != null) {
-            outputStream.println("OK");
-            outputStream.println("patient_id: " + p.getPatientID());
-            outputStream.println("full_name: " + p.getFullName());
-            outputStream.println("document_id: " + p.getDocumentID());
-            outputStream.println("age: " + p.getAge());
-            outputStream.println("sex: " + p.getSex());
-            outputStream.println("contact_email: " + p.getContactEmail());
-            outputStream.println("registration_date: " + p.getRegistrationDate());
-            outputStream.println("clinical_notes: " + p.getClinicalNotes());
-            outputStream.println("checksum_fasta: " + p.getChecksumFasta());
-            outputStream.println("file_size_bytes: " + p.getFileSizeBytes());
+            outputStream.println("OK\n" + p.toString());
         } else {
             outputStream.println("ERROR 404 NOT_FOUND");
         }
     }
+
 
     // ✅ Comparar genoma paciente vs enfermedades
     public List<DetectionReport> detectDiseases(Patient patient, String fastaFilePath) {

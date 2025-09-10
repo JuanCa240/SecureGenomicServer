@@ -1,15 +1,15 @@
 package Server;
 
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
+import Storage.CsvManager;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import javax.net.ssl.SSLSocket;
+
 
 public class Server {
+    private CsvManager csvManager; 
     private int port;
     private ServerSocket serverSocket;
     private ExecutorService executorService;
@@ -19,6 +19,8 @@ public class Server {
         this.port = port;
         this.executorService = Executors.newCachedThreadPool(); // pool dinámico
         this.diseaseDatabase = new DiseaseDatabase();
+        this.csvManager = new CsvManager("data/patients.csv", "data/reports.csv");
+
     }
 
     // Inicializa y arranca el servidor
@@ -48,7 +50,7 @@ public class Server {
                 System.out.println("Nuevo cliente conectado.");
 
                 // Crear un handler por cliente
-                ConnectionHandler handler = new ConnectionHandler(socket, diseaseDatabase);
+                ConnectionHandler handler = new ConnectionHandler(socket, diseaseDatabase, csvManager);
 
                 executorService.submit(handler);
 

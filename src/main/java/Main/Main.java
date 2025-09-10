@@ -52,6 +52,7 @@ public class Main {
                 case "7":
                     System.out.println("Saliendo del sistema...");
                     if (client != null) client.close();
+                    scanner.close();
                     System.exit(0);
                 default:
                     System.out.println("Opción inválida. Intente de nuevo.");
@@ -137,7 +138,8 @@ public class Main {
         client.sendFasta(fastaPath);
 
         // Leer respuesta
-        client.receiveResponse();
+        client.receiveFullResponse();
+
     }
 
     // ✅ Opción 4: Consultar paciente
@@ -150,8 +152,9 @@ public class Main {
         String pid = scanner.nextLine();
 
         client.sendMetadata("RETRIEVE_PATIENT " + pid);
-        client.receiveResponse();
+        client.receiveFullResponse();
     }
+
     
     private static void actualizarPaciente() {
         if (client == null) {
@@ -187,7 +190,6 @@ public class Main {
         if (!fastaPath.isEmpty()) {
             File file = new File(fastaPath);
             metadata.append("file_size_bytes: ").append(file.length()).append("\n");
-            metadata.append("START_FASTA ").append(file.length());
         }
 
         metadata.append("\nEND_METADATA");
@@ -195,10 +197,13 @@ public class Main {
         client.sendMetadata(metadata.toString());
 
         if (!fastaPath.isEmpty()) {
+            File file = new File(fastaPath);
+            client.sendMetadata("START_FASTA " + file.length());
             client.sendFasta(fastaPath);
         }
+        
+        client.receiveFullResponse();
 
-        client.receiveResponse();
     }
     
     private static void eliminarPaciente() {
@@ -211,6 +216,7 @@ public class Main {
         String patientId = scanner.nextLine();
 
         client.sendMetadata("DELETE_PATIENT " + patientId);
-        client.receiveResponse();
+        client.receiveFullResponse();
+
     }
 }

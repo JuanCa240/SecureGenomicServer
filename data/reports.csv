@@ -7,3 +7,7 @@ patientId,diseaseId,severity,detectedAt,description
 12345,D001,8,2025-09-09T14:32:08.681270900,Coincidencia encontrada con COVID19
 12345,D001,8,2025-09-09T14:33:14.018462100,Coincidencia encontrada con COVID19
 1054398670,D001,8,2025-09-09T14:49:12.925608500,Coincidencia encontrada con COVID19
+1054398670,D001,8,2025-09-09T15:42:12.177293500,Coincidencia encontrada con COVID19
+12345,D001,8,2025-09-09T17:46:23.084043300,Coincidencia encontrada con COVID19
+122332,D001,8,2025-09-09T17:51:53.208288200,Coincidencia encontrada con COVID19
+1234,D001,8,2025-09-09T22:47:15.567667300,Coincidencia encontrada con COVID19
